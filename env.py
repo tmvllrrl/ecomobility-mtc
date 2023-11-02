@@ -653,41 +653,8 @@ class Env(MultiAgentEnv):
                 self.global_obs[junc_id] = 1
             self.previous_global_waiting[junc_id]['sum'] = weighted_sum
 
-    def _update_trajectory(self):        
-        # if self.env_step not in self.trajectory.keys():
-        #     self.trajectory[self.env_step] = dict()
-
-        # for veh in self.vehicles:
-        #     junc_id, direction = "none", "none"
-
-        #     if len(veh.road_id)==0:
-        #         ## avoid invalid vehicle information
-        #         continue
-
-        #     if veh.road_id[0] == ':': # inside intersection 
-        #         direction, edge_label = self.map.query_inner_edge_direction(veh.road_id, veh.lane_index)
-        #         for ind in range(len(veh.road_id)):
-        #             if veh.road_id[len(veh.road_id)-1-ind] == '_':
-        #                 break
-        #         last_dash_ind = len(veh.road_id)-1-ind
-
-        #         if edge_label and veh.road_id[1:last_dash_ind] in self.junction_list:
-        #             direction = edge_label+direction
-        #             junc_id = veh.road_id[1:last_dash_ind]
-
-        #     else: # at or going to junction
-        #         junc_id, direction = self.map.get_veh_moving_direction(veh)
-
-        #     if veh.id not in self.trajectory[self.env_step].keys():
-        #         self.trajectory[self.env_step][veh.id] = dict()
-            
-        #     self.trajectory[self.env_step][veh.id]['junc_id'] = junc_id
-        #     self.trajectory[self.env_step][veh.id]['direction'] = direction
-        #     self.trajectory[self.env_step][veh.id]['position'] = veh.position
-        #     self.trajectory[self.env_step][veh.id]['dist_to_junc'] = self.map.get_distance_to_intersection(veh)
-        #     self.trajectory[self.env_step][veh.id]['speed'] = veh.speed
-        #     self.trajectory[self.env_step][veh.id]['acceleration'] = veh.acceleration
-
+    def _update_trajectory(self):   
+        # Only concerned about evaluation period; Could be changed     
         if self.env_step >= 500 and self.env_step < 1000: # only collect data in the same range as eval results
             for veh in self.vehicles:
                 junc_id, direction = "none", "none"
@@ -862,9 +829,7 @@ class Env(MultiAgentEnv):
             curr_obs = self.check_obs_constraint(np.concatenate((junc_obs, other_obs)))
 
             if self.need_to_control(rl_veh):
-                ## need to control 
-                ## average waiting time 
-                
+                ## need to control                 
                 obs_waiting_lst = self.norm_value(obs_waiting_lst, self.max_wait_time, 0)
                 if virtual_id in action.keys():
                     ## reward
@@ -875,64 +840,15 @@ class Env(MultiAgentEnv):
             elif virtual_id in action.keys():
                 ## update reward for the vehicle already enter intersection
                 if rl_veh.road_id[0]==':':
-                    ## inside the intersection
-                    # for direction in self.rotated_directions_order(rl_veh):
-                    #     obs_control_queue_length.extend([self.get_queue_len(junc_id, direction, 'rv')/control_queue_max_len])
-                    #     obs_waiting_lst.extend([self.get_avg_wait_time(junc_id, direction, 'rv')])
-                    #     obs_inner_lst.append(self.inner_lane_occmap[junc_id][direction])
-
-                    # for other_junc_id in other_juncs:
-                    #     for direction in self.directions_order:
-                    #         other_temp_control_queue_length.extend([self.get_queue_len(other_junc_id, direction, 'rv')/control_queue_max_len])
-                    #         other_temp_waiting_lst.extend([self.get_avg_wait_time(other_junc_id, direction, 'rv')])
-                    #         other_temp_inner_lst.append(self.inner_lane_occmap[other_junc_id][direction])
-                    #     other_obs.extend(other_temp_control_queue_length)
-                    #     other_obs.extend(other_temp_waiting_lst)
-                    #     other_obs.extend(np.reshape(np.array(other_temp_inner_lst), (80,)))
-
-                    #     other_temp_control_queue_length = []
-                    #     other_temp_waiting_lst = []
-                    #     other_temp_inner_lst = []
-
-                    # curr_obs = self.check_obs_constraint(np.concatenate((obs_control_queue_length, np.array(obs_waiting_lst), np.reshape(np.array(obs_inner_lst), (80,)))))
-                    # print(f"CURR OBS: {curr_obs}")
-                    # print(f"CURR OBS LENGTH: {len(curr_obs)}")
-
-                    # print(f"OTHER OBSERVATION: {other_obs}")
-                    # print(f"OTHER OBS LENGTH: {len(other_obs)}")
-                    
+                    ## inside the intersection    
                     obs_waiting_lst = self.norm_value(obs_waiting_lst, self.max_wait_time, 0)
                     rewards[virtual_id] = self.compute_reward(rl_veh, obs_waiting_lst, action[virtual_id], junc_id, ego_dir)
                     dones[virtual_id] = True
                     obs[virtual_id] = curr_obs
                     self.terminate_veh(virtual_id)
+
                 else:
                     ## change to right turn lane and no need to control
-                    # for direction in self.rotated_directions_order(rl_veh):
-                    #     obs_control_queue_length.extend([self.get_queue_len(junc_id, direction, 'rv')/control_queue_max_len])
-                    #     obs_waiting_lst.extend([self.get_avg_wait_time(junc_id, direction, 'rv')])
-                    #     obs_inner_lst.append(self.inner_lane_occmap[junc_id][direction])
-
-                    # for other_junc_id in other_juncs:
-                    #     for direction in self.directions_order:
-                    #         other_temp_control_queue_length.extend([self.get_queue_len(other_junc_id, direction, 'rv')/control_queue_max_len])
-                    #         other_temp_waiting_lst.extend([self.get_avg_wait_time(other_junc_id, direction, 'rv')])
-                    #         other_temp_inner_lst.append(self.inner_lane_occmap[other_junc_id][direction])
-                    #     other_obs.extend(other_temp_control_queue_length)
-                    #     other_obs.extend(other_temp_waiting_lst)
-                    #     other_obs.extend(np.reshape(np.array(other_temp_inner_lst), (80,)))
-
-                    #     other_temp_control_queue_length = []
-                    #     other_temp_waiting_lst = []
-                    #     other_temp_inner_lst = []
-                    
-                    # curr_obs = self.check_obs_constraint(np.concatenate((obs_control_queue_length, np.array(obs_waiting_lst), np.reshape(np.array(obs_inner_lst), (80,)))))
-                    # print(f"CURR OBS: {curr_obs}")
-                    # print(f"CURR OBS LENGTH: {len(curr_obs)}")
-
-                    # print(f"OTHER OBSERVATION: {other_obs}")
-                    # print(f"OTHER OBS LENGTH: {len(other_obs)}")
-                    
                     obs_waiting_lst = self.norm_value(obs_waiting_lst, self.max_wait_time, 0)
                     rewards[virtual_id] = 0
                     dones[virtual_id] = True
