@@ -796,7 +796,7 @@ class Env(MultiAgentEnv):
             # Collecting obs from other junctions/directions
             other_juncs = self.junction_list.copy()
             other_juncs.remove(junc_id)
-            random.shuffle(other_juncs) # preventing model overfitting to certain junction order
+            random.shuffle(other_juncs) # Preventing model overfitting to certain junction order
 
             other_obs = [] # Order will be junc_queue, junc_wait, junc_map and then moves to next junction
             other_temp_control_queue_length = []
@@ -832,7 +832,6 @@ class Env(MultiAgentEnv):
                 ## need to control                 
                 obs_waiting_lst = self.norm_value(obs_waiting_lst, self.max_wait_time, 0)
                 if virtual_id in action.keys():
-                    ## reward
                     rewards[virtual_id] = self.compute_reward(rl_veh, obs_waiting_lst, action[virtual_id], junc_id, ego_dir)
                 obs[virtual_id] = curr_obs
                 dones[virtual_id] = False
