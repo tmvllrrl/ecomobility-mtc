@@ -6,6 +6,9 @@
 # To get only HVs, with no traffic lights evaluations (assuming you've changed dqn_run.py to disable traffic lights)
 # python dqn_run.py --rv-rate 1.0 --stop-iters 10 --framework torch --num-cpu 2 --render
 
+# 100% RV pen rate
+python dqn_run.py --rv-rate 1.0 --stop-iters 1000 --framework torch --num-cpu 16 
+
 # 90% RV pen rate
 # python dqn_run.py --rv-rate 0.9 --stop-iters 1000 --framework torch --num-cpu 16 
 

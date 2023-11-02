@@ -78,7 +78,7 @@ class Env(MultiAgentEnv):
     @property
     def n_obs(self):
         ## TODO defination of obs
-        return 80+16
+        return 16+80+288
     
     @property
     def action_space(self):
@@ -329,7 +329,7 @@ class Env(MultiAgentEnv):
             else:
                 dir, label = self.map.query_edge_direction(veh.road_id, veh.lane_index)
                 if not label:
-                    print("error in query lane direction and edge lable")
+                    print("error in query lane direction and edge label")
                     return self.directions_order
                 else:
                     ego_direction = label+dir
@@ -818,49 +818,127 @@ class Env(MultiAgentEnv):
             if len(junc_id) == 0 or junc_id not in self.junction_list:
                 # skip the invalid junc_id 
                 continue
-        
+
+            # Curr junc obs
+            junc_obs = []
             obs_control_queue_length = []
             obs_waiting_lst = []
             obs_inner_lst = []
             control_queue_max_len = self.compute_max_len_of_control_queue(junc_id) + EPSILON
-            if self.need_to_control(rl_veh):
-                ## need to control 
-                ## average waiting time 
-                for direction in self.rotated_directions_order(rl_veh):
+        
+            # Collecting obs from other junctions/directions
+            other_juncs = self.junction_list.copy()
+            other_juncs.remove(junc_id)
+            random.shuffle(other_juncs) # preventing model overfitting to certain junction order
+
+            other_obs = [] # Order will be junc_queue, junc_wait, junc_map and then moves to next junction
+            other_temp_control_queue_length = []
+            other_temp_waiting_lst = []
+            other_temp_inner_lst = []
+
+            for direction in self.rotated_directions_order(rl_veh):
                     obs_control_queue_length.extend([self.get_queue_len(junc_id, direction, 'rv')/control_queue_max_len])
                     obs_waiting_lst.extend([self.get_avg_wait_time(junc_id, direction, 'rv')])
                     obs_inner_lst.append(self.inner_lane_occmap[junc_id][direction])
+
+            for other_junc_id in other_juncs:
+                for direction in self.directions_order:
+                    other_temp_control_queue_length.extend([self.get_queue_len(other_junc_id, direction, 'rv')/control_queue_max_len])
+                    other_temp_waiting_lst.extend([self.get_avg_wait_time(other_junc_id, direction, 'rv')])
+                    other_temp_inner_lst.append(self.inner_lane_occmap[other_junc_id][direction])
+                other_obs.extend(other_temp_control_queue_length)
+                other_obs.extend(other_temp_waiting_lst)
+                other_obs.extend(np.reshape(np.array(other_temp_inner_lst), (80,)))
+
+                other_temp_control_queue_length = []
+                other_temp_waiting_lst = []
+                other_temp_inner_lst = []
+
+            junc_obs.extend(obs_control_queue_length)
+            junc_obs.extend(obs_waiting_lst)
+            junc_obs.extend(np.reshape(np.array(obs_inner_lst), (80,)))
+
+            # Combined obs
+            curr_obs = self.check_obs_constraint(np.concatenate((junc_obs, other_obs)))
+
+            if self.need_to_control(rl_veh):
+                ## need to control 
+                ## average waiting time 
                 
                 obs_waiting_lst = self.norm_value(obs_waiting_lst, self.max_wait_time, 0)
                 if virtual_id in action.keys():
                     ## reward
                     rewards[virtual_id] = self.compute_reward(rl_veh, obs_waiting_lst, action[virtual_id], junc_id, ego_dir)
-                obs[virtual_id] = self.check_obs_constraint(np.concatenate((obs_control_queue_length, np.array(obs_waiting_lst), np.reshape(np.array(obs_inner_lst), (80,)))))
+                obs[virtual_id] = curr_obs
                 dones[virtual_id] = False
+
             elif virtual_id in action.keys():
                 ## update reward for the vehicle already enter intersection
                 if rl_veh.road_id[0]==':':
                     ## inside the intersection
-                    for direction in self.rotated_directions_order(rl_veh):
-                        obs_control_queue_length.extend([self.get_queue_len(junc_id, direction, 'rv')/control_queue_max_len])
-                        obs_waiting_lst.extend([self.get_avg_wait_time(junc_id, direction, 'rv')])
-                        obs_inner_lst.append(self.inner_lane_occmap[junc_id][direction])
+                    # for direction in self.rotated_directions_order(rl_veh):
+                    #     obs_control_queue_length.extend([self.get_queue_len(junc_id, direction, 'rv')/control_queue_max_len])
+                    #     obs_waiting_lst.extend([self.get_avg_wait_time(junc_id, direction, 'rv')])
+                    #     obs_inner_lst.append(self.inner_lane_occmap[junc_id][direction])
+
+                    # for other_junc_id in other_juncs:
+                    #     for direction in self.directions_order:
+                    #         other_temp_control_queue_length.extend([self.get_queue_len(other_junc_id, direction, 'rv')/control_queue_max_len])
+                    #         other_temp_waiting_lst.extend([self.get_avg_wait_time(other_junc_id, direction, 'rv')])
+                    #         other_temp_inner_lst.append(self.inner_lane_occmap[other_junc_id][direction])
+                    #     other_obs.extend(other_temp_control_queue_length)
+                    #     other_obs.extend(other_temp_waiting_lst)
+                    #     other_obs.extend(np.reshape(np.array(other_temp_inner_lst), (80,)))
+
+                    #     other_temp_control_queue_length = []
+                    #     other_temp_waiting_lst = []
+                    #     other_temp_inner_lst = []
+
+                    # curr_obs = self.check_obs_constraint(np.concatenate((obs_control_queue_length, np.array(obs_waiting_lst), np.reshape(np.array(obs_inner_lst), (80,)))))
+                    # print(f"CURR OBS: {curr_obs}")
+                    # print(f"CURR OBS LENGTH: {len(curr_obs)}")
+
+                    # print(f"OTHER OBSERVATION: {other_obs}")
+                    # print(f"OTHER OBS LENGTH: {len(other_obs)}")
+                    
                     obs_waiting_lst = self.norm_value(obs_waiting_lst, self.max_wait_time, 0)
                     rewards[virtual_id] = self.compute_reward(rl_veh, obs_waiting_lst, action[virtual_id], junc_id, ego_dir)
                     dones[virtual_id] = True
-                    obs[virtual_id] = self.check_obs_constraint(np.concatenate((obs_control_queue_length, np.array(obs_waiting_lst), np.reshape(np.array(obs_inner_lst), (80,)))))
+                    obs[virtual_id] = curr_obs
                     self.terminate_veh(virtual_id)
                 else:
                     ## change to right turn lane and no need to control
-                    for direction in self.rotated_directions_order(rl_veh):
-                        obs_control_queue_length.extend([self.get_queue_len(junc_id, direction, 'rv')/control_queue_max_len])
-                        obs_waiting_lst.extend([self.get_avg_wait_time(junc_id, direction, 'rv')])
-                        obs_inner_lst.append(self.inner_lane_occmap[junc_id][direction])
+                    # for direction in self.rotated_directions_order(rl_veh):
+                    #     obs_control_queue_length.extend([self.get_queue_len(junc_id, direction, 'rv')/control_queue_max_len])
+                    #     obs_waiting_lst.extend([self.get_avg_wait_time(junc_id, direction, 'rv')])
+                    #     obs_inner_lst.append(self.inner_lane_occmap[junc_id][direction])
+
+                    # for other_junc_id in other_juncs:
+                    #     for direction in self.directions_order:
+                    #         other_temp_control_queue_length.extend([self.get_queue_len(other_junc_id, direction, 'rv')/control_queue_max_len])
+                    #         other_temp_waiting_lst.extend([self.get_avg_wait_time(other_junc_id, direction, 'rv')])
+                    #         other_temp_inner_lst.append(self.inner_lane_occmap[other_junc_id][direction])
+                    #     other_obs.extend(other_temp_control_queue_length)
+                    #     other_obs.extend(other_temp_waiting_lst)
+                    #     other_obs.extend(np.reshape(np.array(other_temp_inner_lst), (80,)))
+
+                    #     other_temp_control_queue_length = []
+                    #     other_temp_waiting_lst = []
+                    #     other_temp_inner_lst = []
+                    
+                    # curr_obs = self.check_obs_constraint(np.concatenate((obs_control_queue_length, np.array(obs_waiting_lst), np.reshape(np.array(obs_inner_lst), (80,)))))
+                    # print(f"CURR OBS: {curr_obs}")
+                    # print(f"CURR OBS LENGTH: {len(curr_obs)}")
+
+                    # print(f"OTHER OBSERVATION: {other_obs}")
+                    # print(f"OTHER OBS LENGTH: {len(other_obs)}")
+                    
                     obs_waiting_lst = self.norm_value(obs_waiting_lst, self.max_wait_time, 0)
                     rewards[virtual_id] = 0
                     dones[virtual_id] = True
-                    obs[virtual_id] = self.check_obs_constraint(np.concatenate((obs_control_queue_length, np.array(obs_waiting_lst), np.reshape(np.array(obs_inner_lst), (80,)))))
+                    obs[virtual_id] = curr_obs
                     self.terminate_veh(virtual_id)    
+
         dones['__all__'] = False
         infos = {}
         truncated = {}
