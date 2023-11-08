@@ -78,7 +78,7 @@ class Env(MultiAgentEnv):
     @property
     def n_obs(self):
         ## TODO defination of obs
-        return 16+80+288
+        return 16+80
     
     @property
     def action_space(self):
@@ -719,7 +719,6 @@ class Env(MultiAgentEnv):
         #sumo step
         self.sumo_interface.step()
 
-
         # gathering states from sumo 
         sim_res = self.sumo_interface.get_sim_info()
         # setup for new departed vehicles    
@@ -815,7 +814,7 @@ class Env(MultiAgentEnv):
                     other_temp_inner_lst.append(self.inner_lane_occmap[other_junc_id][direction])
                 other_obs.extend(other_temp_control_queue_length)
                 other_obs.extend(other_temp_waiting_lst)
-                other_obs.extend(np.reshape(np.array(other_temp_inner_lst), (80,)))
+                # other_obs.extend(np.reshape(np.array(other_temp_inner_lst), (80,)))
 
                 other_temp_control_queue_length = []
                 other_temp_waiting_lst = []
@@ -826,7 +825,8 @@ class Env(MultiAgentEnv):
             junc_obs.extend(np.reshape(np.array(obs_inner_lst), (80,)))
 
             # Combined obs
-            curr_obs = self.check_obs_constraint(np.concatenate((junc_obs, other_obs)))
+            # curr_obs = self.check_obs_constraint(np.concatenate((junc_obs, other_obs)))
+            curr_obs = self.check_obs_constraint(junc_obs)
 
             if self.need_to_control(rl_veh):
                 ## need to control                 
@@ -876,13 +876,10 @@ class Env(MultiAgentEnv):
     def step(self, action={}):
         if len(action) == 0:
             print("empty action")
-
-        # making every action be 1
-        # for veh_id in action.keys():
-        #     action[veh_id] = 1
         
         obs, rewards, dones, truncated, infos = self.step_once(action)
 
+        # COMMENT OUT THIS PORTION IF DOING BASELINE SCRIPTS
         ## avoid empty obs or all agents are done during simulation
         all_done = True
         for id in dones.keys():

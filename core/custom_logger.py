@@ -87,8 +87,6 @@ class CustomLoggerCallback(DefaultCallbacks):
         episode.custom_metrics["avg_hc_emissions"] = np.mean(episode.user_data["avg_hc_emissions"])
         episode.custom_metrics["avg_nox_emissions"] = np.mean(episode.user_data["avg_nox_emissions"])
 
-        # worker.env.monitor.evaluate(worker.env, save_traj=False)
-
 
 # if __name__ == "__main__":
 #     parser = argparse.ArgumentParser()
