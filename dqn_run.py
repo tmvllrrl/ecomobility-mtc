@@ -100,7 +100,8 @@ if __name__ == "__main__":
         .framework(args.framework)
         .training(
             num_atoms=51,
-            noisy=False,
+            noisy=True,
+            n_step=2,
             hiddens= [512, 512, 512],
             dueling=True,
             double_q=True,

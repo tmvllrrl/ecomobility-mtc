@@ -22,7 +22,7 @@ python dqn_run.py --rv-rate 1.0 --stop-iters 1000 --framework torch --num-cpu 16
 # python dqn_run.py --rv-rate 0.6 --stop-iters 1000 --framework torch --num-cpu 12 
 
 # # 50% RV pen rate
-# python dqn_run.py --rv-rate 0.5 --stop-iters 1000 --framework torch --num-cpu 2 --render 
+# python dqn_run.py --rv-rate 0.5 --stop-iters 1000 --framework torch --num-cpu 2 
 
 # # 40% RV pen rate
 # python dqn_run.py --rv-rate 0.4 --stop-iters 1000 --framework torch --num-cpu 16 

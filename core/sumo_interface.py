@@ -185,9 +185,17 @@ class SUMO(object):
     
     def get_veh_accel(self, veh):
         return self.tc.vehicle.getAcceleration(veh.id)
+    
+    def get_veh_speed(self, veh):
+        return self.tc.vehicle.getSpeed(veh.id)
 
     def accl_control(self, veh, acc, n_acc_steps=1):
         self.tc.vehicle.slowDown(veh.id, max(0, veh.speed + acc * self.sim_step), n_acc_steps * self.sim_step)
+
+    def apply_accel(self, veh, acc):
+        curr_speed = self.get_veh_speed(veh)
+        next_vel = max([curr_speed + acc * self.sim_step, 0])
+        self.tc.vehicle.setSpeed(veh.id, next_vel)
 
     def set_color(self, veh, color):
         self.tc.vehicle.setColor(veh.id, color + (255,))
