@@ -5,7 +5,7 @@ import random
 
 import ray
 from ray import air, tune
-from ray.rllib.algorithms.dqn import DQNConfig, DQNTorchPolicy
+from ray.rllib.algorithms.ppo import PPOConfig, PPOTorchPolicy
 from env import Env
 from ray.rllib.examples.models.shared_weights_model import (
     SharedWeightsModel1,
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     dummy_env.close()
     policy = {
         "shared_policy": (
-            DQNTorchPolicy, 
+            PPOTorchPolicy,
             obs_space,
             act_space,
             None
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     policy_mapping_fn = lambda agent_id, episode, worker, **kwargs: "shared_policy"
             
     config = (
-        DQNConfig()
+        PPOConfig()
         .environment(Env, env_config={
             "junction_list":['229','499','332','334'],
             "spawn_rl_prob":{},
@@ -99,17 +99,11 @@ if __name__ == "__main__":
         auto_wrap_old_gym_envs=False)
         .framework(args.framework)
         .training(
-            num_atoms=51,
-            noisy=False,
-            # n_step=2,
-            hiddens= [512, 512, 512], # Original [512,512,512], Trial 9551a uses [128,128,128]
-            dueling=True,
-            double_q=True,
-            replay_buffer_config={
-                'type':'MultiAgentPrioritizedReplayBuffer',
-                'prioritized_replay_alpha':0.5,
-                'capacity':50000,
-            }
+            use_critic=True,
+            use_gae=True,
+            kl_coeff=0.2,
+            clip_param=0.3,
+            lr=5e-5,
         )
         .rollouts(num_rollout_workers=args.num_cpus-1, rollout_fragment_length="auto")
         .multi_agent(policies=policy, policy_mapping_fn=policy_mapping_fn)
@@ -123,9 +117,9 @@ if __name__ == "__main__":
     }
 
     results = tune.Tuner(
-        "DQN", 
+        "PPO", 
         param_space=config.to_dict(),
-        run_config=air.RunConfig(name='DQN_RV'+str(args.rv_rate), stop=stop, verbose=3, log_to_file=True, 
+        run_config=air.RunConfig(name='PPO_RV'+str(args.rv_rate), stop=stop, verbose=3, log_to_file=True, 
         checkpoint_config=air.CheckpointConfig(
             checkpoint_frequency = 5,
         )),

@@ -82,6 +82,18 @@ class Env(MultiAgentEnv):
     
     @property
     def action_space(self):
+        ## Continuous acceleration values
+        # return Box(
+        #     low=-2,
+        #     high=2,
+        #     shape=(1, ),
+        #     dtype=np.float32
+        # )
+
+        ## Discretized acceleration space TODO: Need more bins
+        # return Discrete(9) # discrete acceleration values
+
+        ## Original action space
         return Discrete(2)
 
     @property
@@ -145,7 +157,8 @@ class Env(MultiAgentEnv):
 
         # vehicle queue and control queue
         self.control_queue = dict()
-        self.control_queue_waiting_time = dict()        
+        self.control_queue_waiting_time = dict()   
+        self.control_fuel = dict()     
         self.queue = dict()
         self.queue_waiting_time = dict()
         self.head_of_control_queue = dict()
@@ -153,6 +166,7 @@ class Env(MultiAgentEnv):
         for junc_id in self.junction_list:
             self.control_queue[junc_id] = dict()
             self.control_queue_waiting_time[junc_id] = dict()
+            self.control_fuel[junc_id] = dict()
             self.queue[junc_id] = dict()
             self.queue_waiting_time[junc_id] = dict()
             self.head_of_control_queue[junc_id] = dict()
@@ -160,6 +174,7 @@ class Env(MultiAgentEnv):
             for direction in self.directions_order:
                 self.control_queue[junc_id][direction] = []
                 self.control_queue_waiting_time[junc_id][direction] = []
+                self.control_fuel[junc_id][direction] = []
                 self.queue[junc_id][direction] = []
                 self.queue_waiting_time[junc_id][direction] = []
                 self.head_of_control_queue[junc_id][direction] = []
@@ -214,8 +229,21 @@ class Env(MultiAgentEnv):
             print('Error Mode in Queue Waiting time Calculation')
             return 0
 
-    def get_avg_junc_fuel(self, junc_id, direction):
+    def get_avg_dir_fuel(self, junc_id, direction):
         return np.mean(np.array(self.fuel_consumption[junc_id][direction])) if len(self.fuel_consumption[junc_id][direction]) > 0 else 0
+    
+    def get_avg_control_junc_fuel(self, junc_id):
+        if len(self.vehicles) == 0:
+            return 0
+        
+        junc_fuel = []
+        for direction in self.directions_order:
+            junc_fuel.extend(self.control_fuel[junc_id][direction])
+
+        if len(junc_fuel) == 0:
+            return 0
+
+        return float(np.mean(junc_fuel))
         
     def get_avg_fuel_consumption(self):
         if len(self.vehicles) == 0:
@@ -454,31 +482,30 @@ class Env(MultiAgentEnv):
 
         self.reward_record[rl_veh.id] = dict()
         total_veh_control_queue = self._compute_total_num_control_queue(self.control_queue[junc])
+
         if not total_veh_control_queue:
             ## avoid empty queue at the beginning
             total_veh_control_queue = 1
+
         if action == 1:
             egoreward = waiting_lst[0]
         else:
             egoreward = -waiting_lst[0]
-        
+    
+        ## Punish high fuel consumption
+        egoreward = egoreward - (0.1 * self.get_avg_control_junc_fuel(junc))
+
+        if rl_veh.id in self.conflict_vehids:
+            ## punishing conflicting action
+            egoreward = egoreward - 1
+
         ## global reward negative is bad, positive is good
         globalreward = self.global_obs[junc]
         self.reward_record[rl_veh.id]['ego'] = egoreward
         self.reward_record[rl_veh.id]['global'] = globalreward
         self.reward_record[rl_veh.id]['sum'] = egoreward + globalreward
-        if egoreward > 1:
-            print('too large ego reward')
         
-        if math.isnan(egoreward + globalreward):
-            print('nan')
-        if rl_veh.id in self.conflict_vehids:
-            ## punishing conflicting action
-            self.reward_record[rl_veh.id]['ego'] = egoreward-1
-
-            return egoreward-1 
-        else:
-            return egoreward
+        return egoreward
 
     def _traffic_light_program_update(self):
         if self._step> self.traffic_light_program['disable_light_start']:
@@ -507,6 +534,7 @@ class Env(MultiAgentEnv):
                 self.head_of_control_queue[junc_id][direction] = []
                 self.control_queue_waiting_time[junc_id][direction] = []
                 self.queue_waiting_time[junc_id][direction] = []
+                self.control_fuel[junc_id][direction] = []
                 self.fuel_consumption[junc_id][direction] = []
                 self.co2_emissions[junc_id][direction] = []
                 self.co_emissions[junc_id][direction] = []
@@ -569,6 +597,7 @@ class Env(MultiAgentEnv):
                     if veh.type == 'RL':
                         self.control_queue[junc_id][direction].extend([veh])
                         self.control_queue_waiting_time[junc_id][direction].extend([self.veh_waiting_juncs[veh.id][junc_id]])
+                        self.control_fuel[junc_id][direction].extend([self.sumo_interface.get_veh_fuel_consumption(self.rl_vehicles[veh.id])])
             
             # Update fuel consumption and emissions for each intersection and direction
             if veh.road_id[0] == ':': # inside intersection 
@@ -604,8 +633,6 @@ class Env(MultiAgentEnv):
 
                         self.veh_nox_emissions[veh.id][junc_id] = self.sumo_interface.get_veh_nox_emission(self.vehicles[veh.id])
                         self.nox_emissions[junc_id][direction].extend([self.veh_nox_emissions[veh.id][junc_id]])
-
-
 
             else: # at or going to junction
                 junc_id, direction = self.map.get_veh_moving_direction(veh)
@@ -716,15 +743,46 @@ class Env(MultiAgentEnv):
             elif action[virtual_id] == 0:
                 self.sumo_interface.accl_control(self.rl_vehicles[veh_id], self.soft_deceleration(self.rl_vehicles[veh_id]))
         
+        # print(f"ACTIONS: {action}")
         ## Apply acceleration action 
         # for virtual_id in action.keys():
         #     veh_id = self.convert_virtual_id_to_real_id(virtual_id)
+
+        #     junc_id, ego_dir = self.map.get_veh_moving_direction(self.rl_vehicles[veh_id])
+        #     if self.conflict_predetection(junc_id, ego_dir): # Every time agent takes an agent, check if causes conflict
+        #         self.conflict_vehids.extend([veh_id])
+
+        #     if action[virtual_id] == 0:
+        #         self.sumo_interface.apply_accel(self.rl_vehicles[veh_id], -2.0)
+        #     elif action[virtual_id] == 1:
+        #         self.sumo_interface.apply_accel(self.rl_vehicles[veh_id], -1.5)
+        #     elif action[virtual_id] == 2:
+        #         self.sumo_interface.apply_accel(self.rl_vehicles[veh_id], -1.0)
+        #     elif action[virtual_id] == 3:
+        #         self.sumo_interface.apply_accel(self.rl_vehicles[veh_id], -0.5)
+        #     elif action[virtual_id] == 4:
+        #         self.sumo_interface.apply_accel(self.rl_vehicles[veh_id], 0)
+        #     elif action[virtual_id] == 5:
+        #         self.sumo_interface.apply_accel(self.rl_vehicles[veh_id], 0.5)
+        #     elif action[virtual_id] == 6:
+        #         self.sumo_interface.apply_accel(self.rl_vehicles[veh_id], 1.0)
+        #     elif action[virtual_id] == 7:
+        #         self.sumo_interface.apply_accel(self.rl_vehicles[veh_id], 1.5)
+        #     elif action[virtual_id] == 8:
+        #         self.sumo_interface.apply_accel(self.rl_vehicles[veh_id], 2.0)
+
+        ## Apply continuous acceleration action
+        # for virtual_id in action.keys():
+        #     veh_id = self.convert_virtual_id_to_real_id(virtual_id)
+
         #     junc_id, ego_dir = self.map.get_veh_moving_direction(self.rl_vehicles[veh_id])
         #     if self.conflict_predetection(junc_id, ego_dir):
-        #         self.sumo_interface.apply_accel(self.rl_vehicles[veh_id], action[virtual_id])
         #         self.conflict_vehids.extend([veh_id])
-        #     else:
-        #         self.sumo_interface.apply_accel(self.rl_vehicles[veh_id], action[virtual_id])
+            
+        #     self.sumo_interface.apply_accel(self.rl_vehicles[veh_id], action[virtual_id])
+        
+        # print(f"CONFLICT VEH IDS: {self.conflict_vehids}")
+
 
         #sumo step
         self.sumo_interface.step()
@@ -777,6 +835,7 @@ class Env(MultiAgentEnv):
         obs = {}
         rewards = {}
         dones = {}
+
         for rl_veh in self.rl_vehicles:
             virtual_id = self.virtual_id_assign(rl_veh.id)
             if len(rl_veh.road_id) == 0:
@@ -864,6 +923,7 @@ class Env(MultiAgentEnv):
                         obs_control_queue_length.extend([self.get_queue_len(junc_id, keyword, 'rv')/control_queue_max_len])
                         obs_waiting_lst.extend([self.get_avg_wait_time(junc_id, keyword, 'rv')])
                         obs_inner_lst.append(self.inner_lane_occmap[junc_id][keyword])
+
                     obs_waiting_lst = self.norm_value(obs_waiting_lst, self.max_wait_time, 0)
                     rewards[virtual_id] = self.compute_reward(rl_veh, obs_waiting_lst, action[virtual_id], junc_id, ego_dir)
                     dones[virtual_id] = True
@@ -875,6 +935,7 @@ class Env(MultiAgentEnv):
                         obs_control_queue_length.extend([self.get_queue_len(junc_id, keyword, 'rv')/control_queue_max_len])
                         obs_waiting_lst.extend([self.get_avg_wait_time(junc_id, keyword, 'rv')])
                         obs_inner_lst.append(self.inner_lane_occmap[junc_id][keyword])
+
                     obs_waiting_lst = self.norm_value(obs_waiting_lst, self.max_wait_time, 0)
                     rewards[virtual_id] = 0
                     dones[virtual_id] = True

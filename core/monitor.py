@@ -63,7 +63,7 @@ class DataMonitor(object):
                 self.data_record[junc_id][direction]['throughput'][t] = len(env.inner_lane_newly_enter[junc_id][direction])
                 self.data_record[junc_id][direction]['conflict'][t] = len(env.conflict_vehids)
                 self.data_record[junc_id][direction]['global_reward'][t] = env.global_obs[junc_id]
-                self.data_record[junc_id][direction]['fuel_consumption'][t] = env.get_avg_junc_fuel(junc_id, direction)
+                self.data_record[junc_id][direction]['fuel_consumption'][t] = env.get_avg_dir_fuel(junc_id, direction)
                 self.data_record[junc_id][direction]['co2_emissions'][t] = env.get_avg_junc_co2(junc_id, direction)
                 self.data_record[junc_id][direction]['co_emissions'][t] = env.get_avg_junc_co(junc_id, direction)
                 self.data_record[junc_id][direction]['hc_emissions'][t] = env.get_avg_junc_hc(junc_id, direction)
