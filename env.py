@@ -161,6 +161,7 @@ class Env(MultiAgentEnv):
         self.control_queue_waiting_time = dict()   
         self.control_fuel = dict()   
         self.control_speed = dict()  
+        self.control_accel = dict()
         self.queue = dict()
         self.queue_waiting_time = dict()
         self.head_of_control_queue = dict()
@@ -170,6 +171,7 @@ class Env(MultiAgentEnv):
             self.control_queue_waiting_time[junc_id] = dict()
             self.control_fuel[junc_id] = dict()
             self.control_speed[junc_id] = dict()
+            self.control_accel[junc_id] = dict()
             self.queue[junc_id] = dict()
             self.queue_waiting_time[junc_id] = dict()
             self.head_of_control_queue[junc_id] = dict()
@@ -179,6 +181,7 @@ class Env(MultiAgentEnv):
                 self.control_queue_waiting_time[junc_id][direction] = []
                 self.control_fuel[junc_id][direction] = []
                 self.control_speed[junc_id][direction] = []
+                self.control_accel[junc_id][direction] = []
                 self.queue[junc_id][direction] = []
                 self.queue_waiting_time[junc_id][direction] = []
                 self.head_of_control_queue[junc_id][direction] = []
@@ -277,6 +280,19 @@ class Env(MultiAgentEnv):
             return 0
 
         return float(np.mean(junc_speed))
+    
+    def get_avg_control_junc_accel(self, junc_id):
+        if len(self.vehicles) == 0:
+            return 0
+        
+        junc_accel = []
+        for direction in self.directions_order:
+            junc_accel.extend(self.control_accel[junc_id][direction])
+
+        if len(junc_accel) == 0:
+            return 0
+
+        return float(np.mean(junc_accel))
     
     def get_avg_junc_co2(self, junc_id, direction):
         return np.mean(np.array(self.co2_emissions[junc_id][direction])) if len(self.co2_emissions[junc_id][direction]) > 0 else 0
@@ -535,6 +551,11 @@ class Env(MultiAgentEnv):
         avg_junc_speed = self.get_avg_control_junc_speed(junc)
         egoreward = egoreward + (0.1 * avg_junc_speed)
 
+        ## Punish high average control accel
+        avg_junc_accel = self.get_avg_control_junc_accel(junc)
+        if avg_junc_accel > 0:
+            egoreward = egoreward - (1.0 * avg_junc_accel)
+
         if rl_veh.id in self.conflict_vehids:
             ## punishing conflicting action
             egoreward = egoreward - 1
@@ -576,6 +597,7 @@ class Env(MultiAgentEnv):
                 self.queue_waiting_time[junc_id][direction] = []
                 self.control_fuel[junc_id][direction] = []
                 self.control_speed[junc_id][direction] = []
+                self.control_accel[junc_id][direction] = []
                 self.fuel_consumption[junc_id][direction] = []
                 self.co2_emissions[junc_id][direction] = []
                 self.co_emissions[junc_id][direction] = []
@@ -641,6 +663,7 @@ class Env(MultiAgentEnv):
                         self.control_queue_waiting_time[junc_id][direction].extend([self.veh_waiting_juncs[veh.id][junc_id]])
                         self.control_fuel[junc_id][direction].extend([self.sumo_interface.get_veh_fuel_consumption(self.rl_vehicles[veh.id])])
                         self.control_speed[junc_id][direction].extend([self.sumo_interface.get_veh_speed(self.rl_vehicles[veh.id])])
+                        self.control_accel[junc_id][direction].extend([self.sumo_interface.get_veh_accel(self.rl_vehicles[veh.id])])
             
             # Update fuel consumption and emissions for each intersection and direction
             if veh.road_id[0] == ':': # inside intersection 
