@@ -134,6 +134,7 @@ class Env(MultiAgentEnv):
         self.veh_co_emissions = dict()
         self.veh_hc_emissions = dict()
         self.veh_nox_emissions = dict()
+        self.veh_pmx_emissions = dict()
 
         # env level
         self._step = 0
@@ -179,24 +180,27 @@ class Env(MultiAgentEnv):
                 self.queue_waiting_time[junc_id][direction] = []
                 self.head_of_control_queue[junc_id][direction] = []
 
-        # fuel consumption and co2 emissions
+        # fuel consumption and emissions
         self.fuel_consumption = dict()
         self.co2_emissions = dict()
         self.co_emissions = dict()
         self.hc_emissions = dict()
         self.nox_emissions = dict()
+        self.pmx_emissions = dict()
         for junc_id in self.junction_list:
             self.fuel_consumption[junc_id] = dict()
             self.co2_emissions[junc_id] = dict()
             self.co_emissions[junc_id] = dict()
             self.hc_emissions[junc_id] = dict()
             self.nox_emissions[junc_id] = dict()
+            self.pmx_emissions[junc_id] = dict()
             for direction in self.directions_order:
                 self.fuel_consumption[junc_id][direction] = []
                 self.co2_emissions[junc_id][direction] = []
                 self.co_emissions[junc_id][direction] = []
                 self.hc_emissions[junc_id][direction] = []
                 self.nox_emissions[junc_id][direction] = []
+                self.pmx_emissions[junc_id][direction] = []
 
         # trajectory dictionary
         self.trajectory = dict()
@@ -321,6 +325,22 @@ class Env(MultiAgentEnv):
         avg_nox_emissions = avg_nox_emissions if avg_nox_emissions >= 0.0 else 0.0     
 
         return avg_nox_emissions
+    
+    def get_avg_junc_pmx(self, junc_id, direction):
+        return np.mean(np.array(self.pmx_emissions[junc_id][direction])) if len(self.pmx_emissions[junc_id][direction]) > 0 else 0
+    
+    def get_avg_pmx_emissions(self):
+        if len(self.vehicles) == 0:
+            return 0
+        
+        pmx_emissions = 0
+        for veh in self.vehicles:
+            pmx_emissions += self.sumo_interface.get_veh_pmx_emission(self.vehicles[veh.id])
+
+        avg_pmx_emissions = pmx_emissions / len(self.vehicles)   
+        avg_pmx_emissions = avg_pmx_emissions if avg_pmx_emissions >= 0.0 else 0.0     
+
+        return avg_pmx_emissions
 
     def get_queue_len(self, junc_id, direction, mode='all'):
         ## mode = all, rv
@@ -540,6 +560,7 @@ class Env(MultiAgentEnv):
                 self.co_emissions[junc_id][direction] = []
                 self.hc_emissions[junc_id][direction] = []
                 self.nox_emissions[junc_id][direction] = []
+                self.pmx_emissions[junc_id][direction] = []
                 
         # occupancy map
         self.inner_lane_obs = dict()
@@ -618,6 +639,7 @@ class Env(MultiAgentEnv):
                             self.veh_co_emissions[veh.id] = dict()
                             self.veh_hc_emissions[veh.id] = dict()
                             self.veh_nox_emissions[veh.id] = dict()
+                            self.veh_pmx_emissions[veh.id] = dict()
                         
                         self.veh_fuel_consumption[veh.id][junc_id] = self.sumo_interface.get_veh_fuel_consumption(self.vehicles[veh.id])
                         self.fuel_consumption[junc_id][direction].extend([self.veh_fuel_consumption[veh.id][junc_id]])
@@ -634,6 +656,9 @@ class Env(MultiAgentEnv):
                         self.veh_nox_emissions[veh.id][junc_id] = self.sumo_interface.get_veh_nox_emission(self.vehicles[veh.id])
                         self.nox_emissions[junc_id][direction].extend([self.veh_nox_emissions[veh.id][junc_id]])
 
+                        self.veh_pmx_emissions[veh.id][junc_id] = self.sumo_interface.get_veh_pmx_emission(self.vehicles[veh.id])
+                        self.pmx_emissions[junc_id][direction].extend([self.veh_pmx_emissions[veh.id][junc_id]])
+
             else: # at or going to junction
                 junc_id, direction = self.map.get_veh_moving_direction(veh)
 
@@ -644,6 +669,7 @@ class Env(MultiAgentEnv):
                         self.veh_co_emissions[veh.id] = dict()
                         self.veh_hc_emissions[veh.id] = dict()
                         self.veh_nox_emissions[veh.id] = dict()
+                        self.veh_pmx_emissions[veh.id] = dict()
                     
                     if self.map.get_distance_to_intersection(veh) <= self.control_zone_length:
                         self.veh_fuel_consumption[veh.id][junc_id] = self.sumo_interface.get_veh_fuel_consumption(self.vehicles[veh.id])
@@ -660,6 +686,9 @@ class Env(MultiAgentEnv):
 
                         self.veh_nox_emissions[veh.id][junc_id] = self.sumo_interface.get_veh_nox_emission(self.vehicles[veh.id])
                         self.nox_emissions[junc_id][direction].extend([self.veh_nox_emissions[veh.id][junc_id]])
+
+                        self.veh_pmx_emissions[veh.id][junc_id] = self.sumo_interface.get_veh_pmx_emission(self.vehicles[veh.id])
+                        self.pmx_emissions[junc_id][direction].extend([self.veh_pmx_emissions[veh.id][junc_id]])
                                 
         ## update previous global waiting for next step reward calculation
         for junc_id in self.junction_list:

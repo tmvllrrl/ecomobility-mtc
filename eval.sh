@@ -3,6 +3,9 @@
 ############## Script for evaluting a trial with RV 1.0 pen rate
 # python dqn_eval.py --rv-rate 1.0 --model-dir /home/michael/ray_results/DQN_RV1.0/trial/checkpoint_000310 --save-dir /home/michael/Desktop/mtc-ecomobility/eval_results --stop-timesteps 1000 
 
+############## Script for evaluting a trial with RV 1.0 pen rate and emissions term with 0.1 coeff
+# python dqn_eval.py --rv-rate 1.0 --model-dir /home/michael/ray_results/DQN_RV1.0/with_emis_term_0.1/checkpoint_000475 --save-dir /home/michael/Desktop/mtc-ecomobility/eval_results --stop-timesteps 1000 
+
 ############## Script for evaluting a trial with RV 0.9 pen rate
 # python dqn_eval.py --rv-rate 0.9 --model-dir /home/michael/ray_results/DQN_RV0.9/trial/checkpoint_000270 --save-dir /home/michael/Desktop/mtc-ecomobility/eval_results --stop-timesteps 1000
 

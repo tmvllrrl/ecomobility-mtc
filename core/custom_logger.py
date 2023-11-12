@@ -36,6 +36,7 @@ class CustomLoggerCallback(DefaultCallbacks):
         episode.user_data["avg_co_emissions"] = []
         episode.user_data["avg_hc_emissions"] = []
         episode.user_data["avg_nox_emissions"] = []
+        episode.user_data["avg_pmx_emissions"] = []
 
     def on_episode_step(
             self,
@@ -69,6 +70,9 @@ class CustomLoggerCallback(DefaultCallbacks):
         avg_nox_emissions = worker.env.monitor.overall_nox_record[-1]
         episode.user_data["avg_nox_emissions"].extend([avg_nox_emissions])
 
+        avg_pmx_emissions = worker.env.monitor.overall_pmx_record[-1]
+        episode.user_data["avg_pmx_emissions"].extend([avg_pmx_emissions])
+
     def on_episode_end(
         self,
         *,
@@ -86,6 +90,7 @@ class CustomLoggerCallback(DefaultCallbacks):
         episode.custom_metrics["avg_co_emissions"] = np.mean(episode.user_data["avg_co_emissions"])
         episode.custom_metrics["avg_hc_emissions"] = np.mean(episode.user_data["avg_hc_emissions"])
         episode.custom_metrics["avg_nox_emissions"] = np.mean(episode.user_data["avg_nox_emissions"])
+        episode.custom_metrics["avg_pmx_emissions"] = np.mean(episode.user_data["avg_pmx_emissions"])
 
 
 # if __name__ == "__main__":

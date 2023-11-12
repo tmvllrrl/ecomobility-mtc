@@ -51,6 +51,7 @@ class DataMonitor(object):
                 self.data_record[junc_id][direction]['co_emissions'] = np.zeros(5000)
                 self.data_record[junc_id][direction]['hc_emissions'] = np.zeros(5000)
                 self.data_record[junc_id][direction]['nox_emissions'] = np.zeros(5000)
+                self.data_record[junc_id][direction]['pmx_emissions'] = np.zeros(5000)
 
     def step(self, env):
         t = env.env_step
@@ -68,6 +69,7 @@ class DataMonitor(object):
                 self.data_record[junc_id][direction]['co_emissions'][t] = env.get_avg_junc_co(junc_id, direction)
                 self.data_record[junc_id][direction]['hc_emissions'][t] = env.get_avg_junc_hc(junc_id, direction)
                 self.data_record[junc_id][direction]['nox_emissions'][t] = env.get_avg_junc_nox(junc_id, direction)
+                self.data_record[junc_id][direction]['pmx_emissions'][t] = env.get_avg_junc_pmx(junc_id, direction)
         
         self.conflict_rate.extend([len(env.conflict_vehids)/len(env.previous_action) if len(env.previous_action) else 0])
         self.overall_fuel_record.extend([env.get_avg_fuel_consumption()])
@@ -75,6 +77,7 @@ class DataMonitor(object):
         self.overall_co_record.extend([env.get_avg_co_emissions()])
         self.overall_hc_record.extend([env.get_avg_hc_emissions()])
         self.overall_nox_record.extend([env.get_avg_nox_emissions()])
+        self.overall_pmx_record.extend([env.get_avg_pmx_emissions()])
 
     def evaluate(self, env, save_traj = False, min_step = 500, max_step = 1000):
         overall_wait = []
@@ -116,7 +119,7 @@ class DataMonitor(object):
         avg_overall_fuel = np.mean(self.overall_fuel_record[min_step:max_step])
         with open("eval_results/all_results.txt", "a") as file1:
             file1.write(f"OVERALL AVG FUEL CONSUMPTION OF NETWORK: {avg_overall_fuel}\n\n")
-        print(f"OVERALL AVG FUEL CONSUMPTION OF NETWORK: {avg_overall_fuel}")
+        print(f"OVERALL AVG FUEL CONSUMPTION OF NETWORK: {avg_overall_fuel}\n\n")
 
         total_co2 = []
         for junc_id in self.junction_list:
@@ -135,7 +138,7 @@ class DataMonitor(object):
         avg_overall_co2 = np.mean(self.overall_co2_record[min_step:max_step])
         with open("eval_results/all_results.txt", "a") as file1:
             file1.write(f"OVERALL AVG CO2 EMISSIONS OF NETWORK: {avg_overall_co2}\n\n")
-        print(f"OVERALL AVG CO2 EMISSIONS OF NETWORK: {avg_overall_co2}")
+        print(f"OVERALL AVG CO2 EMISSIONS OF NETWORK: {avg_overall_co2}\n\n")
 
         total_co = []
         for junc_id in self.junction_list:
@@ -154,7 +157,7 @@ class DataMonitor(object):
         avg_overall_co = np.mean(self.overall_co_record[min_step:max_step])
         with open("eval_results/all_results.txt", "a") as file1:
             file1.write(f"OVERALL AVG CO EMISSIONS OF NETWORK: {avg_overall_co}\n\n")
-        print(f"OVERALL AVG CO EMISSIONS OF NETWORK: {avg_overall_co}")
+        print(f"OVERALL AVG CO EMISSIONS OF NETWORK: {avg_overall_co}\n\n")
 
         total_hc = []
         for junc_id in self.junction_list:
@@ -173,7 +176,7 @@ class DataMonitor(object):
         avg_overall_hc = np.mean(self.overall_hc_record[min_step:max_step])
         with open("eval_results/all_results.txt", "a") as file1:
             file1.write(f"OVERALL AVG HC EMISSIONS OF NETWORK: {avg_overall_hc}\n\n")
-        print(f"OVERALL AVG HC EMISSIONS OF NETWORK: {avg_overall_hc}")
+        print(f"OVERALL AVG HC EMISSIONS OF NETWORK: {avg_overall_hc}\n\n")
 
         total_nox = []
         for junc_id in self.junction_list:
@@ -192,10 +195,29 @@ class DataMonitor(object):
         avg_overall_nox = np.mean(self.overall_nox_record[min_step:max_step])
         with open("eval_results/all_results.txt", "a") as file1:
             file1.write(f"OVERALL AVG NOX EMISSIONS OF NETWORK: {avg_overall_nox}\n\n")
-        print(f"OVERALL AVG NOX EMISSIONS OF NETWORK: {avg_overall_nox}")
+        print(f"OVERALL AVG NOX EMISSIONS OF NETWORK: {avg_overall_nox}\n\n")
+
+        total_pmx = []
+        for junc_id in self.junction_list:
+            for direction in self.directions_order:
+                avg_pmx_emissions = np.mean(self.data_record[junc_id][direction]['pmx_emissions'][min_step:max_step])
+                total_pmx.extend([avg_pmx_emissions])
+
+                with open("eval_results/all_results.txt", "a") as file1:
+                    file1.write(f"AVG PMX EMISSIONS AT JUNCTION {junc_id} {direction}: {avg_pmx_emissions}\n")
+                print(f"AVG PMX EMISSIONS AT JUNCTION {junc_id} {direction}: {avg_pmx_emissions}\n")
+            
+            with open("eval_results/all_results.txt", "a") as file1:
+                file1.write(f"OVERALL AVG PMX EMISSIONS AT JUNCTION {junc_id}: {np.mean(total_pmx)}\n\n")
+            print(f"OVERALL AVG PMX EMISSIONS AT JUNCTION {junc_id}: {np.mean(total_pmx)}\n\n")
+
+        avg_overall_pmx = np.mean(self.overall_pmx_record[min_step:max_step])
+        with open("eval_results/all_results.txt", "a") as file1:
+            file1.write(f"OVERALL AVG PMX EMISSIONS OF NETWORK: {avg_overall_pmx}\n\n")
+        print(f"OVERALL AVG PMX EMISSIONS OF NETWORK: {avg_overall_pmx}\n\n")
 
         with open("eval_results/avg_results.csv", "a") as file2:
-            file2.write(f"{avg_overall_wait},{avg_overall_fuel},{avg_overall_co2},{avg_overall_co},{avg_overall_hc},{avg_overall_nox}\n")
+            file2.write(f"{avg_overall_wait},{avg_overall_fuel},{avg_overall_co2},{avg_overall_co},{avg_overall_hc},{avg_overall_nox},{avg_overall_pmx}\n")
 
         if save_traj:
             with open("eval_results/eval_trajectory.json", "a") as file3:

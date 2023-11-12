@@ -183,6 +183,9 @@ class SUMO(object):
     def get_veh_nox_emission(self, veh):
         return self.tc.vehicle.getNOxEmission(veh.id)
     
+    def get_veh_pmx_emission(self, veh):
+        return self.tc.vehicle.getPMxEmission(veh.id)
+    
     def get_veh_accel(self, veh):
         return self.tc.vehicle.getAcceleration(veh.id)
     

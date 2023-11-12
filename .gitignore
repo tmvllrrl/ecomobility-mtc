@@ -9,3 +9,5 @@ real_data/rawdump.xml
 real_data/traffic_figures/
 sumolog
 .vscode/
+eval_results/
+eval_results/*
