@@ -31,6 +31,7 @@ class DataMonitor(object):
         self.overall_co_record = []
         self.overall_hc_record = []
         self.overall_nox_record = []
+        self.overall_pmx_record = []
 
         for junc_id in self.junction_list:
             self.data_record[junc_id] = dict()
