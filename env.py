@@ -545,16 +545,16 @@ class Env(MultiAgentEnv):
             egoreward = -waiting_lst[0]
     
         ## Punish high fuel consumption
-        egoreward = egoreward - (0.1 * self.get_avg_control_junc_fuel(junc))
+        # egoreward = egoreward - (0.1 * self.get_avg_control_junc_fuel(junc))
 
         ## Reward higher average control speed
         avg_junc_speed = self.get_avg_control_junc_speed(junc)
         egoreward = egoreward + (0.1 * avg_junc_speed)
 
         ## Punish high average control accel
-        avg_junc_accel = self.get_avg_control_junc_accel(junc)
-        if avg_junc_accel > 0:
-            egoreward = egoreward - (1.0 * avg_junc_accel)
+        # avg_junc_accel = self.get_avg_control_junc_accel(junc)
+        # if avg_junc_accel > 0:
+        #     egoreward = egoreward - (1.0 * avg_junc_accel)
 
         if rl_veh.id in self.conflict_vehids:
             ## punishing conflicting action
