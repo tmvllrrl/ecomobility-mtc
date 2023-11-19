@@ -19,7 +19,7 @@
 # python dqn_eval.py --rv-rate 0.6 --model-dir /home/michael/ray_results/DQN_RV0.6/trial/checkpoint_000525 --save-dir /home/michael/Desktop/mtc-ecomobility/eval_results --stop-timesteps 1000
 
 ##### ######### Script for evaluating a trial with RV 0.5 pen rate
-# python dqn_eval.py --rv-rate 0.5 --model-dir /home/michael/ray_results/DQN_RV0.5/trial/checkpoint_000325 --save-dir /home/michael/Desktop/mtc-ecomobility/eval_results --stop-timesteps 1000 
+python dqn_eval.py --rv-rate 0.5 --model-dir /home/michael/ray_results/DQN_RV0.5/trial/checkpoint_000325 --save-dir /home/michael/Desktop/mtc-ecomobility/eval_results --stop-timesteps 1000 --render
 
 ############## Script for evaluting a trial with RV 0.4 pen rate
 # python dqn_eval.py --rv-rate 0.4 --model-dir /home/michael/ray_results/DQN_RV0.4/trial/checkpoint_001000 --save-dir /home/michael/Desktop/mtc-ecomobility/eval_results --stop-timesteps 1000
