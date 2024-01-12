@@ -83,18 +83,18 @@ class Env(MultiAgentEnv):
     @property
     def action_space(self):
         ## Continuous acceleration values
-        return Box(
-            low=-2,
-            high=2,
-            shape=(1, ),
-            dtype=np.float32
-        )
+        # return Box(
+        #     low=-2,
+        #     high=2,
+        #     shape=(1, ),
+        #     dtype=np.float32
+        # )
 
         ## Discretized acceleration space TODO: Need more bins
         # return Discrete(9) # discrete acceleration values
 
         ## Original action space
-        # return Discrete(2)
+        return Discrete(2)
 
     @property
     def observation_space(self):
@@ -540,21 +540,21 @@ class Env(MultiAgentEnv):
             total_veh_control_queue = 1
 
         ## Reward for continuous actions according to PhD candidate (My guess at least)
-        if action > 0:
-            accel_term = 1 - ((abs(action - 2)) / 2)
-            egoreward = float(accel_term * waiting_lst[0])
-        else:
-            accel_term = 1 + ((abs(action - 2)) / 2)
-            egoreward = float(accel_term * -waiting_lst[0])
+        # if action > 0:
+        #     accel_term = 1 - ((abs(action - 2)) / 2)
+        #     egoreward = float(accel_term * waiting_lst[0])
+        # else:
+        #     accel_term = 1 + ((abs(action - 2)) / 2)
+        #     egoreward = float(accel_term * -waiting_lst[0])
 
         ## Reward calculation for discrete actions
-        # if action == 1:
-        #     egoreward = waiting_lst[0]
-        # else:
-        #     egoreward = -waiting_lst[0]
+        if action == 1:
+            egoreward = waiting_lst[0]
+        else:
+            egoreward = -waiting_lst[0]
 
-        ## TODO: Test this reward function compared to above for discrete action 
-        # egoreward = waiting_lst[0]
+        ## Test this reward function compared to above for discrete action 
+        # egoreward = waiting_lst[0] # Results in significantly worse performance and waiting times
     
         ##### EMISSION REWARD TERMS #####
 
@@ -820,18 +820,18 @@ class Env(MultiAgentEnv):
             return dict()
                 
         ## Original action execution
-        # for virtual_id in action.keys():
-        #     veh_id = self.convert_virtual_id_to_real_id(virtual_id)
-        #     if action[virtual_id] == 1:
-        #         junc_id, ego_dir = self.map.get_veh_moving_direction(self.rl_vehicles[veh_id])
-        #         if self.conflict_predetection(junc_id, ego_dir):
-        #             ## conflict
-        #             self.sumo_interface.accl_control(self.rl_vehicles[veh_id], self.soft_deceleration(self.rl_vehicles[veh_id]))
-        #             self.conflict_vehids.extend([veh_id])
-        #         else:
-        #             self.sumo_interface.accl_control(self.rl_vehicles[veh_id], self.max_acc)
-        #     elif action[virtual_id] == 0:
-        #         self.sumo_interface.accl_control(self.rl_vehicles[veh_id], self.soft_deceleration(self.rl_vehicles[veh_id]))
+        for virtual_id in action.keys():
+            veh_id = self.convert_virtual_id_to_real_id(virtual_id)
+            if action[virtual_id] == 1:
+                junc_id, ego_dir = self.map.get_veh_moving_direction(self.rl_vehicles[veh_id])
+                if self.conflict_predetection(junc_id, ego_dir):
+                    ## conflict
+                    self.sumo_interface.accl_control(self.rl_vehicles[veh_id], self.soft_deceleration(self.rl_vehicles[veh_id]))
+                    self.conflict_vehids.extend([veh_id])
+                else:
+                    self.sumo_interface.accl_control(self.rl_vehicles[veh_id], self.max_acc)
+            elif action[virtual_id] == 0:
+                self.sumo_interface.accl_control(self.rl_vehicles[veh_id], self.soft_deceleration(self.rl_vehicles[veh_id]))
         
         # print(f"ACTIONS: {action}")
         ## Apply acceleration action 
@@ -862,17 +862,14 @@ class Env(MultiAgentEnv):
         #         self.sumo_interface.apply_accel(self.rl_vehicles[veh_id], 2.0)
 
         ## Apply continuous acceleration action
-        for virtual_id in action.keys():
-            veh_id = self.convert_virtual_id_to_real_id(virtual_id)
+        # for virtual_id in action.keys():
+        #     veh_id = self.convert_virtual_id_to_real_id(virtual_id)
 
-            junc_id, ego_dir = self.map.get_veh_moving_direction(self.rl_vehicles[veh_id])
-            if self.conflict_predetection(junc_id, ego_dir):
-                self.conflict_vehids.extend([veh_id])
+        #     junc_id, ego_dir = self.map.get_veh_moving_direction(self.rl_vehicles[veh_id])
+        #     if self.conflict_predetection(junc_id, ego_dir):
+        #         self.conflict_vehids.extend([veh_id])
             
-            self.sumo_interface.apply_accel(self.rl_vehicles[veh_id], action[virtual_id])
-        
-        # print(f"CONFLICT VEH IDS: {self.conflict_vehids}")
-
+        #     self.sumo_interface.apply_accel(self.rl_vehicles[veh_id], action[virtual_id])
 
         #sumo step
         self.sumo_interface.step()
