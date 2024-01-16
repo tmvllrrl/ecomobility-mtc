@@ -38,7 +38,7 @@ fs = 24
 
 y = [1754.74, 1628.30, 1456.71, 1356.16, 1315.61, 1250.54, 1254.18, 1290.50, 1271.13, 1284.51]
 ax.hlines(1705.53, 10, 100, color="black", label="HVs w/ TS", linestyles="--", linewidth=2)
-ax.plot(x, y, color="lightcoral", label="RV Pen. Rates", linewidth=2)
+ax.plot(x, y, color="firebrick", label="RV Pen. Rates", linewidth=2)
 ax.set_title("CO$_2$ Emissions Across Intersections", fontsize=fs)
 ax.set_ylabel("CO$_2$ Emissions (mg/s)", fontsize=fs)
 
@@ -76,7 +76,7 @@ ax.set_ylabel("CO$_2$ Emissions (mg/s)", fontsize=fs)
 # ax.plot(x, y_nox, color="darkorange", label="NOx Emissions", linewidth=2)
 
 ax.set_xlabel("RV Penetration Rates", fontsize=fs)
-ax.set_ylabel("Average Normalized Emissions", fontsize=fs)
+# ax.set_ylabel("Average Normalized Emissions", fontsize=fs)
 ax.set_xlim(10, 100)
 plt.xticks(fontsize=fs)
 plt.yticks(fontsize=fs)
