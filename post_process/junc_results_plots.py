@@ -36,7 +36,7 @@ fs = 24
 # ax.set_title("Fuel Consumption Across Intersections", fontsize=fs)
 # ax.set_ylabel("Fuel Consumption (ml/s)", fontsize=fs)
 
-y = [1754.74, 1628.30, 1456.71, 1356.16, 1315.61, 1250.54, 1254.18, 1290.50, 1271.13, 1284.51]
+y = [1660.53, 1633.54, 1433.41, 1354.196, 1348.32, 1268.10, 1237.83, 1322.75, 1272.009, 1262.508]
 ax.hlines(1705.53, 10, 100, color="black", label="HVs w/ TS", linestyles="--", linewidth=2)
 ax.plot(x, y, color="firebrick", label="RV Pen. Rates", linewidth=2)
 ax.set_title("CO$_2$ Emissions Across Intersections", fontsize=fs)
@@ -81,5 +81,5 @@ ax.set_xlim(10, 100)
 plt.xticks(fontsize=fs)
 plt.yticks(fontsize=fs)
 
-ax.legend(fontsize=fs-7, loc="upper right")
+ax.legend(fontsize=fs-7, loc="lower left")
 plt.savefig('../img/co2_emissions.png', bbox_inches="tight")
