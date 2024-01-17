@@ -30,12 +30,12 @@ fs = 28
 # ax.set_title("Wait Time Across Intersections", fontsize=fs)
 # ax.set_ylabel("Wait Time (s)", fontsize=fs)
 
-# y = [0.7138, 0.7022, 0.6162, 0.5821, 0.5796, 0.5451, 0.5321, 0.5686, 0.5468, 0.5427]
-# ax.hlines(0.7332, 10, 100, color="black", label="HVs w/ TS", linestyles="--", linewidth=6)
-# ax.plot(x, y, color="slateblue", label="RV Pen. Rates", linewidth=6)
-# ax.set_title("Fuel Consumption", fontsize=fs)
-# ax.set_ylabel("Fuel Consumption (ml/s)", fontsize=fs)
-# ax.yaxis.set_major_formatter('{x:.2f}')
+y = [0.7138, 0.7022, 0.6162, 0.5821, 0.5796, 0.5451, 0.5321, 0.5686, 0.5468, 0.5427]
+ax.hlines(0.7332, 10, 100, color="black", label="HVs w/ TS", linestyles="--", linewidth=6)
+ax.plot(x, y, color="slateblue", label="RV Pen. Rates", linewidth=6)
+ax.set_title("Fuel Consumption", fontsize=fs)
+ax.set_ylabel("Fuel Consumption (ml/s)", fontsize=fs)
+ax.yaxis.set_major_formatter('{x:.2f}')
 
 # y = [1660.53, 1633.54, 1433.41, 1354.196, 1348.32, 1268.10, 1237.83, 1322.75, 1272.009, 1262.508]
 # ax.hlines(1705.53, 10, 100, color="black", label="HVs w/ TS", linestyles="--", linewidth=6)
@@ -56,11 +56,11 @@ fs = 28
 # ax.set_ylabel("HC Emissions (mg/s)", fontsize=fs)
 # ax.yaxis.set_major_formatter('{x:.2f}')
 
-y = [0.7464, 0.7313, 0.6364, 0.5970, 0.5919, 0.5534, 0.5391, 0.5779, 0.5494, 0.5442]
-ax.hlines(0.7535, 10, 100, color="black", label="HVs w/ TS", linestyles="--", linewidth=6)
-ax.plot(x, y, color="darkorange", label="RV Pen. Rates", linewidth=6)
-ax.set_title("NOx Emissions", fontsize=fs)
-ax.set_ylabel("NOx Emissions (mg/s)", fontsize=fs)
+# y = [0.7464, 0.7313, 0.6364, 0.5970, 0.5919, 0.5534, 0.5391, 0.5779, 0.5494, 0.5442]
+# ax.hlines(0.7535, 10, 100, color="black", label="HVs w/ TS", linestyles="--", linewidth=6)
+# ax.plot(x, y, color="darkorange", label="RV Pen. Rates", linewidth=6)
+# ax.set_title("NOx Emissions", fontsize=fs)
+# ax.set_ylabel("NOx Emissions (mg/s)", fontsize=fs)
 
 # y_fuel = [0.7138, 0.7022, 0.6162, 0.5821, 0.5796, 0.5451, 0.5321, 0.5686, 0.5468, 0.5427]
 # y_co = [90.45, 86.33, 70.83, 63.00, 60.72, 53.65, 51.18, 56.72, 48.89, 47.60, 83.76]
@@ -83,5 +83,5 @@ ax.set_xlim(10, 100)
 plt.xticks(fontsize=fs)
 plt.yticks(fontsize=fs)
 
-ax.legend(fontsize=fs-7, loc="center right")
-plt.savefig('../img/nox_emissions.png', bbox_inches="tight")
+ax.legend(fontsize=fs-4, loc="center right")
+plt.savefig('../img/fuel_emissions.png', bbox_inches="tight")
