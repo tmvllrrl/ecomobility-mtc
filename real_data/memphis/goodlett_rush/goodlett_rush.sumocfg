@@ -6,8 +6,8 @@
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
 
     <input>
-        <net-file value="CSeditClean_1.net_threelegs.xml"/>
-        <route-files value="newroute1220_start0.xml"/>
+        <net-file value="goodlett_rush.net.xml"/>
+        <route-files value="goodlett_rush.rou.xml"/>
         <!-- <route-files value="global_route.xml"/> -->
 	<!-- <additional-files value = 'tllogic.add.xml'/> -->
     </input>
@@ -25,9 +25,5 @@
         <duration-log.statistics value="true"/>
         <no-step-log value="true"/>
     </report>
-
-    <gui_only>
-        <gui-settings-file value="osm.view.xml"/>
-    </gui_only>
 
 </configuration>

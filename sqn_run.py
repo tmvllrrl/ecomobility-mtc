@@ -48,18 +48,29 @@ parser.add_argument(
     "--render", action="store_true", help="Whether to render SUMO or not"
 )
 
+parser.add_argument(
+    "--scenario", choices=["gm", "gr", "sm", "sr"], default="gm", help="Which of the 4 traffic scenarios to train"
+)
+
 if __name__ == "__main__":
     args = parser.parse_args()
+
+    scenario = {
+        'gm': ['203789561', 'real_data/memphis/goodlett_mid/goodlett_mid.sumocfg', 'real_data/memphis/goodlett_mid/goodlett_mid.net.xml'],
+        'gr': ['203789561', 'real_data/memphis/goodlett_rush/goodlett_rush.sumocfg', 'real_data/memphis/goodlett_rush/goodlett_rush.net.xml'],
+        'sm': ['203926974', 'real_data/memphis/saint_mid/saint_mid.sumocfg', 'real_data/memphis/saint_mid/saint_mid.net.xml'],
+        'sr': ['203926974', 'real_data/memphis/saint_rush/saint_rush.sumocfg', 'real_data/memphis/saint_rush/saint_rush.net.xml']
+    }
 
     ray.init(num_gpus=1, num_cpus=args.num_cpus)
 
     dummy_env = Env({
-            "junction_list":['229','499','332','334'],
+            "junction_list":[scenario[args.scenario][0]],
             "spawn_rl_prob":{},
             "probablity_RL":args.rv_rate,
-            "cfg":'real_data/colorado.sumocfg', 
+            "cfg":scenario[args.scenario][1],
             "render": args.render,
-            "map_xml":'real_data/colarado.net.xml', 
+            "map_xml":scenario[args.scenario][2], 
             "max_episode_steps":1000,
             "conflict_mechanism":'flexible',
             "traffic_light_program":{
@@ -82,12 +93,12 @@ if __name__ == "__main__":
     config = (
         DQNConfig()
         .environment(Env, env_config={
-            "junction_list":['229','499','332','334'],
+            "junction_list":[scenario[args.scenario][0]],
             "spawn_rl_prob":{},
             "probablity_RL": args.rv_rate,
-            "cfg":'real_data/colorado.sumocfg', 
+            "cfg":scenario[args.scenario][1],
             "render": args.render,
-            "map_xml":'real_data/colorado.net.xml', 
+            "map_xml":scenario[args.scenario][2], 
             # "rl_prob_range": [i*0.1 for i in range(5, 10)], # change RV penetration rate when reset
             "max_episode_steps":1000,
             "conflict_mechanism":'flexible',
