@@ -136,9 +136,9 @@ if __name__ == "__main__":
     results = tune.Tuner(
         "DQN", 
         param_space=config.to_dict(),
-        run_config=air.RunConfig(name='DQN_RV'+str(args.rv_rate), stop=stop, verbose=3, log_to_file=True, 
+        run_config=air.RunConfig(name='SQN_RV'+str(args.rv_rate)+str(args.scenario), stop=stop, verbose=3, log_to_file=True, 
         checkpoint_config=air.CheckpointConfig(
-            checkpoint_frequency = 5,
+            checkpoint_frequency = 1,
         )),
     ).fit()
 

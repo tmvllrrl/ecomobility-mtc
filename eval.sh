@@ -19,7 +19,7 @@
 # python dqn_eval.py --rv-rate 0.6 --model-dir /home/michael/ray_results/DQN_RV0.6/trial/checkpoint_000525 --save-dir /home/michael/Desktop/mtc-ecomobility/eval_results --stop-timesteps 1000
 
 ##### ######### Script for evaluating a trial with RV 0.5 pen rate
-python dqn_eval.py --rv-rate 0.5 --model-dir /home/michael/ray_results/DQN_RV0.5/trial/checkpoint_000325 --save-dir /home/michael/Desktop/mtc-ecomobility/eval_results --stop-timesteps 1000 --render
+# python dqn_eval.py --rv-rate 0.5 --model-dir /home/michael/ray_results/DQN_RV0.5/trial/checkpoint_000325 --save-dir /home/michael/Desktop/mtc-ecomobility/eval_results --stop-timesteps 1000 --render
 
 ############## Script for evaluting a trial with RV 0.4 pen rate
 # python dqn_eval.py --rv-rate 0.4 --model-dir /home/michael/ray_results/DQN_RV0.4/trial/checkpoint_001000 --save-dir /home/michael/Desktop/mtc-ecomobility/eval_results --stop-timesteps 1000
@@ -32,3 +32,9 @@ python dqn_eval.py --rv-rate 0.5 --model-dir /home/michael/ray_results/DQN_RV0.5
 
 ############## Script for evaluting a trial with RV 0.1 pen rate
 # python dqn_eval.py --rv-rate 0.1 --model-dir /home/michael/ray_results/DQN_RV0.1/trial/checkpoint_000700 --save-dir /home/michael/Desktop/mtc-ecomobility/eval_results --stop-timesteps 1000
+
+# Evaluating SQN at goodlett midday
+# python sqn_eval.py --rv-rate 0.5 --model-dir /home/michael/ray_results/DQN_RV0.5/SQN_GM/checkpoint_1000 --save-dir /home/michael/Desktop/mtc-ecomobility/eval_results --stop-timesteps 1000 --scenario gm --render
+
+# Evaluating SQN at goodlett midday
+# python sqn_eval.py --rv-rate 0.01 --model-dir /home/michael/ray_results/SQN_RV0.01gm/SQN_GM/checkpoint_1 --save-dir /home/michael/Desktop/ecomobility-mtc/eval_results --stop-timesteps 1000 --scenario gm 

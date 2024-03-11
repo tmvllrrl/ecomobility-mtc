@@ -136,6 +136,10 @@ class Env(MultiAgentEnv):
         self.veh_nox_emissions = dict()
         self.veh_pmx_emissions = dict()
 
+        # for storing arrived/departed ids and the time they arrived/departed
+        self.arrived_ids = dict()
+        self.departed_ids = dict()
+
         # env level
         self._step = 0
         self.previous_obs = {}
@@ -166,6 +170,7 @@ class Env(MultiAgentEnv):
         self.queue_waiting_time = dict()
         self.head_of_control_queue = dict()
         self.inner_speed = dict()
+
         for junc_id in self.junction_list:
             self.control_queue[junc_id] = dict()
             self.control_queue_waiting_time[junc_id] = dict()
@@ -193,6 +198,7 @@ class Env(MultiAgentEnv):
         self.hc_emissions = dict()
         self.nox_emissions = dict()
         self.pmx_emissions = dict()
+
         for junc_id in self.junction_list:
             self.fuel_consumption[junc_id] = dict()
             self.co2_emissions[junc_id] = dict()
@@ -373,6 +379,23 @@ class Env(MultiAgentEnv):
         avg_pmx_emissions = avg_pmx_emissions if avg_pmx_emissions >= 0.0 else 0.0     
 
         return avg_pmx_emissions
+    
+    def get_avg_traveltime(self, departed_dict, arrived_dict):
+        if len(arrived_dict.keys()) == 0:
+            return 0
+        
+        avg = 0
+        n = len(arrived_dict.keys())
+
+        for x in arrived_dict.keys():
+            time_arrived = arrived_dict[x]
+            time_departed = departed_dict[x] # if in departed, then should be in arrived
+            
+
+            traveltime = time_arrived - time_departed
+            avg += traveltime
+
+        return float(avg / n)
 
     def get_queue_len(self, junc_id, direction, mode='all'):
         ## mode = all, rv
@@ -770,6 +793,17 @@ class Env(MultiAgentEnv):
                 self.global_obs[junc_id] = 1
             self.previous_global_waiting[junc_id]['sum'] = weighted_sum
 
+        # update arrived and departed times
+        newly_arrived = self.sumo_interface.get_arrived_vehs()
+        newly_departed = self.sumo_interface.get_departed_vehs()
+
+        for x in newly_arrived:
+            self.arrived_ids[x] = self.env_step
+
+        for x in newly_departed:
+            self.departed_ids[x] = self.env_step
+
+
     def _update_trajectory(self):   
         # Only concerned about evaluation period; Could be changed     
         if self.env_step >= 500 and self.env_step < 1000: # only collect data in the same range as eval results
@@ -1056,6 +1090,7 @@ class Env(MultiAgentEnv):
 
         # COMMENT OUT THIS PORTION IF DOING BASELINE SCRIPTS
         ## avoid empty obs or all agents are done during simulation
+        
         all_done = True
         for id in dones.keys():
             if not dones[id] and id!='__all__':

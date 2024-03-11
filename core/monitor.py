@@ -33,6 +33,9 @@ class DataMonitor(object):
         self.overall_nox_record = []
         self.overall_pmx_record = []
 
+        self.arrived = dict()
+        self.departed = dict()
+
         for junc_id in self.junction_list:
             self.data_record[junc_id] = dict()
             for direction in self.directions_order :
@@ -80,7 +83,16 @@ class DataMonitor(object):
         self.overall_nox_record.extend([env.get_avg_nox_emissions()])
         self.overall_pmx_record.extend([env.get_avg_pmx_emissions()])
 
+        self.arrived = env.arrived_ids
+        self.departed = env.departed_ids
+
     def evaluate(self, env, save_traj = False, min_step = 500, max_step = 1000):
+        avg_traveltime = env.get_avg_traveltime(self.departed, self.arrived)
+
+        with open("eval_results/all_results.txt", "a") as file1:
+            file1.write(f"AVG TRAVEL TIME OF ALL VEHICLES AT JUNCTION {junc_id}: {avg_traveltime}\n\n")
+        print(f"AVG TRAVEL TIME OF ALL VEHICLES AT JUNCTION {junc_id}: {avg_traveltime}\n\n")
+
         overall_wait = []
         for junc_id in self.junction_list:
             total_wait = []
