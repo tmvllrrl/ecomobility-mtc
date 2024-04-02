@@ -49,17 +49,17 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--scenario", choices=["gm", "gr", "sm", "sr"], default="gm", help="Which of the 4 traffic scenarios to train"
+    "--scenario", choices=["one", "two", "three", "four"], default="one", help="Which of the 4 traffic scenarios to train"
 )
 
 if __name__ == "__main__":
     args = parser.parse_args()
 
     scenario = {
-        'gm': ['203789561', 'real_data/memphis/goodlett_mid/goodlett_mid.sumocfg', 'real_data/memphis/goodlett_mid/goodlett_mid.net.xml'],
-        'gr': ['203789561', 'real_data/memphis/goodlett_rush/goodlett_rush.sumocfg', 'real_data/memphis/goodlett_rush/goodlett_rush.net.xml'],
-        'sm': ['203926974', 'real_data/memphis/saint_mid/saint_mid.sumocfg', 'real_data/memphis/saint_mid/saint_mid.net.xml'],
-        'sr': ['203926974', 'real_data/memphis/saint_rush/saint_rush.sumocfg', 'real_data/memphis/saint_rush/saint_rush.net.xml']
+        'one': ['203789561', 'real_data/memphis/scenario_1/scenario_1.sumocfg', 'real_data/memphis/scenario_1/scenario_1.net.xml'],
+        'two': ['203789561', 'real_data/memphis/scenario_2/scenario_2.sumocfg', 'real_data/memphis/scenario_2/scenario_2.net.xml'],
+        'three': ['203926974', 'real_data/memphis/scenario_3/scenario_3.sumocfg', 'real_data/memphis/scenario_3/scenario_3.net.xml'],
+        'four': ['203926974', 'real_data/memphis/scenario_4/scenario_4.sumocfg', 'real_data/memphis/scenario_4/scenario_4.net.xml']
     }
 
     ray.init(num_gpus=1, num_cpus=args.num_cpus)
